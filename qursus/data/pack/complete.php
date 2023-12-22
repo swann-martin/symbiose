@@ -1,4 +1,5 @@
 <?php
+
 use qursus\UserAccess;
 
 list($params, $providers) = announce([
@@ -18,47 +19,55 @@ list($params, $providers) = announce([
     'providers'     => ['context', 'orm', 'auth']
 ]);
 
-list($context, $orm) = [ $providers['context'], $providers['orm'] ];
+/**
+ * @var \equal\php\Context                  $context
+ * @var \equal\orm\ObjectManager            $orm
+ * @var \equal\auth\AuthenticationManager   $auth
+ */
+list($context, $orm, $auth) = [$providers['context'], $providers['orm'], $providers['auth']];
 
 /*
     Retrieve current user id
 */
 
-if(!isset($_COOKIE) || !isset($_COOKIE["wp_lms_user"]) || !is_numeric($_COOKIE["wp_lms_user"])) {
-    throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
-}
+// if(!isset($_COOKIE) || !isset($_COOKIE["wp_lms_user"]) || !is_numeric($_COOKIE["wp_lms_user"])) {
+//     throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
+// }
 
-$user_id = (int) $_COOKIE["wp_lms_user"];
+// $user_id = (int) $_COOKIE["wp_lms_user"];
 
-if($user_id <= 0) {
-    throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
-}
+// if($user_id <= 0) {
+//     throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
+// }
 
+
+$user_id = $auth->userId();
 
 /*
     Check if user is granted access over given pack
 */
 
 // root(1), admin(2) and editor(3) are always granted
-if($user_id > 3) {
+if ($user_id > 3) {
     // check that the user is granted to access target module
-    $access = UserAccess::search([ ['pack_id', '=', $params['pack_id']], ['user_id', '=', $user_id] ])->ids();
-    if(!$access || !count($access)) {
+    $access = UserAccess::search([['pack_id', '=', $params['pack_id']], ['user_id', '=', $user_id]])->ids();
+    if (!$access || !count($access)) {
         throw new Exception('missing_licence', QN_ERROR_NOT_ALLOWED);
     }
 }
 
+echo (UserAccess::search([['pack_id', '=', $params['pack_id']], ['user_id', '=', $user_id]]))->first();
 
-$access = UserAccess::search([ ['pack_id', '=', $params['pack_id']], ['user_id', '=', $user_id] ])->read(['is_complete', 'code', 'code_alpha'])->first();
+$access = UserAccess::search([['pack_id', '=', $params['pack_id']], ['user_id', '=', $user_id]])->read(['is_complete', 'code', 'code_alpha'])->first();
 
 $result = ['complete' => true];
 
-if(!$access) {
-    throw new Exception('unknown_program', QN_ERROR_UNKNOWN_OBJECT);
-}
+// if (!$access) {
+//     throw new Exception('unknown_program', QN_ERROR_UNKNOWN_OBJECT);
+// }
 
 $result['complete'] = (bool) $access['is_complete'];
 
 $context->httpResponse()
-        ->body($result)
-        ->send();
+    ->body($result)
+    ->send();

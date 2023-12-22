@@ -1,4 +1,5 @@
 <?php
+
 use qursus\Module;
 use qursus\Chapter;
 use qursus\Page;
@@ -8,15 +9,14 @@ use qursus\Group;
 use qursus\Widget;
 
 list($params, $providers) = announce([
-    'description'   => "",
-    'params'        => [
-    ],
+    'description'   => "Create Modules, Chapters, Leaves, Pages, Groups and Widgets based on ATModule.json file",
+    'params'        => [],
     'response'      => [
         'content-type'  => 'application/json',
         'charset'       => 'utf-8',
         'accept-origin' => '*'
     ],
-    'providers'     => ['context', 'orm', 'auth'] 
+    'providers'     => ['context', 'orm', 'auth']
 ]);
 
 // read json file
@@ -33,223 +33,220 @@ $oModule = Module::create([
 ])->first();
 
 
-foreach($module['chapters'] as $chapter_index => $chapter) {
-    
+foreach ($module['chapters'] as $chapter_index => $chapter) {
+
     $oChapter = Chapter::create([
         'identifier'        => $chapter_index + 1,
         'title'             => $chapter['title'],
         'module_id'         => $oModule['id']
     ])->first();
 
-  foreach($chapter['pages'] as $page_index => $page) {
+    foreach ($chapter['pages'] as $page_index => $page) {
 
-    $object = $page;
+        $object = $page;
 
-    if(isset($object['id'])) {
-        unset($object['id']);
-    }
-
-    if(isset($page['next_active'])) {
-        $object['next_active'] = _json_to_string($page['next_active']);
-    }    
-    $object['identifier'] = $page_index + 1;
-    $object['chapter_id'] = $oChapter['id'];
-
-    $oPage = Page::create($object)->first();
-
-    if(!isset($page['leaves'])) continue;
-
-    foreach($page['leaves'] as $leaf_index => $leaf) {
-
-        $object = $leaf;
-        if(isset($object['id'])) {
+        if (isset($object['id'])) {
             unset($object['id']);
         }
-        if(isset($object['groups'])) {
-            unset($object['groups']);
+
+        if (isset($page['next_active'])) {
+            $object['next_active'] = _json_to_string($page['next_active']);
         }
-        $object['identifier'] = $leaf_index + 1;
-        $object['page_id'] = $oPage['id'];
+        $object['identifier'] = $page_index + 1;
+        $object['chapter_id'] = $oChapter['id'];
 
-        if(isset($object['visible'])) {
-            $object['visible'] = _json_to_string($leaf['visible']);
-        }
+        $oPage = Page::create($object)->first();
 
-        $oLeaf = Leaf::create($object)->first();
-    
-        if(!isset($leaf['groups'])) continue;
+        if (!isset($page['leaves'])) continue;
 
-        foreach($leaf['groups'] as $group_index => $group) {
+        foreach ($page['leaves'] as $leaf_index => $leaf) {
 
-            $object = $group;
-            if(isset($object['id'])) {
+            $object = $leaf;
+            if (isset($object['id'])) {
                 unset($object['id']);
             }
-            if(isset($object['widgets'])) {
-                unset($object['widgets']);
+            if (isset($object['groups'])) {
+                unset($object['groups']);
             }
-            if(isset($object['visible'])) {
-                $object['visible'] = _json_to_string($group['visible']);
-            }
-            $object['identifier'] = $group_index + 1;
-            $object['leaf_id'] = $oLeaf['id'];
-
-            $oGroup = Group::create($object)->first();
-
-            if(!isset($group['widgets'])) continue;
-
-            foreach($group['widgets'] as $widget_index => $widget) {
-
-                if(isset($widget['id'])) {
-                    unset($widget['id']);
-                }
-            
-                $widget['group_id'] = $oGroup['id'];
-                $widget['identifier'] = $widget_index + 1;
-
-                if(isset($widget['content'])) {
-                    $widget['content'] = _md_to_html($widget['content']);
-                }
-
-                Widget::create($widget);
-    
-            }
-        }    
-    }
-
-    if(isset($page['sections'])) {
-        foreach($page['sections'] as $section_index => $section) {
-
-            $object = $section;
-            
-            if(isset($object['id'])) {
-                unset($object['id']);
-            }
-
-            $object['identifier'] = $section_index + 1;
+            $object['identifier'] = $leaf_index + 1;
             $object['page_id'] = $oPage['id'];
 
-            $oSection = Section::create($object)->first();
+            if (isset($object['visible'])) {
+                $object['visible'] = _json_to_string($leaf['visible']);
+            }
 
-            if(!isset($section['pages'])) continue;
+            $oLeaf = Leaf::create($object)->first();
 
-            foreach($section['pages'] as $page_index => $page) {
+            if (!isset($leaf['groups'])) continue;
 
-                $object = $page;
-                if(isset($object['id'])) {
+            foreach ($leaf['groups'] as $group_index => $group) {
+
+                $object = $group;
+                if (isset($object['id'])) {
                     unset($object['id']);
                 }
-                if(isset($object['leaves'])) {
-                    unset($object['leaves']);
+                if (isset($object['widgets'])) {
+                    unset($object['widgets']);
+                }
+                if (isset($object['visible'])) {
+                    $object['visible'] = _json_to_string($group['visible']);
+                }
+                $object['identifier'] = $group_index + 1;
+                $object['leaf_id'] = $oLeaf['id'];
+
+                $oGroup = Group::create($object)->first();
+
+                if (!isset($group['widgets'])) continue;
+
+                foreach ($group['widgets'] as $widget_index => $widget) {
+
+                    if (isset($widget['id'])) {
+                        unset($widget['id']);
+                    }
+
+                    $widget['group_id'] = $oGroup['id'];
+                    $widget['identifier'] = $widget_index + 1;
+
+                    if (isset($widget['content'])) {
+                        $widget['content'] = _md_to_html($widget['content']);
+                    }
+
+                    Widget::create($widget);
+                }
+            }
+        }
+
+        if (isset($page['sections'])) {
+            foreach ($page['sections'] as $section_index => $section) {
+
+                $object = $section;
+
+                if (isset($object['id'])) {
+                    unset($object['id']);
                 }
 
-                if(isset($page['next_active'])) {
-                    $object['next_active'] = _json_to_string($page['next_active']);
-                }
-                $object['identifier'] = $page_index + 1;
-                $object['section_id']  = $oSection['id'];
+                $object['identifier'] = $section_index + 1;
+                $object['page_id'] = $oPage['id'];
 
-                $section_oPage = Page::create($object)->first();
+                $oSection = Section::create($object)->first();
 
-                if(!isset($page['leaves'])) continue;
+                if (!isset($section['pages'])) continue;
 
-                foreach($page['leaves'] as $leaf_index => $leaf) {
+                foreach ($section['pages'] as $page_index => $page) {
 
-                    $object = $leaf;
-                    if(isset($object['id'])) {
+                    $object = $page;
+                    if (isset($object['id'])) {
                         unset($object['id']);
                     }
-
-                    if(isset($object['groups'])) {
-                        unset($object['groups']);
+                    if (isset($object['leaves'])) {
+                        unset($object['leaves']);
                     }
-                    $object['identifier'] = $leaf_index + 1;
-                    $object['page_id'] = $section_oPage['id'];
 
-                    if(isset($object['visible'])) {
-                        $object['visible'] = _json_to_string($leaf['visible']);
+                    if (isset($page['next_active'])) {
+                        $object['next_active'] = _json_to_string($page['next_active']);
                     }
-        
-                    $section_oLeaf = Leaf::create($object)->first();
-            
-                    if(!isset($leaf['groups'])) continue;
+                    $object['identifier'] = $page_index + 1;
+                    $object['section_id']  = $oSection['id'];
 
-                    foreach($leaf['groups'] as $group_index => $group) {
+                    $section_oPage = Page::create($object)->first();
 
-                        $object = $group;
-                        if(isset($object['id'])) {
+                    if (!isset($page['leaves'])) continue;
+
+                    foreach ($page['leaves'] as $leaf_index => $leaf) {
+
+                        $object = $leaf;
+                        if (isset($object['id'])) {
                             unset($object['id']);
                         }
-                        if(isset($object['widgets'])) {
-                            unset($object['widgets']);
-                        }
-                        $object['identifier'] = $group_index + 1;
-                        $object['leaf_id'] = $section_oLeaf['id'];
-            
-                        if(isset($object['visible'])) {
-                            $object['visible'] = _json_to_string($group['visible']);
-                        }
-            
-                        $section_oGroup = Group::create($object)->first();
 
-                        if(!isset($group['widgets'])) continue;
+                        if (isset($object['groups'])) {
+                            unset($object['groups']);
+                        }
+                        $object['identifier'] = $leaf_index + 1;
+                        $object['page_id'] = $section_oPage['id'];
 
-                        foreach($group['widgets'] as $widget_index => $widget) {
-                            if(isset($widget['id'])) {
-                                unset($widget['id']);
-                            }            
-                            $widget['group_id'] = $section_oGroup['id'];
-                            $widget['identifier'] = $widget_index + 1;
-                            if(isset($widget['content'])) {
-                                $widget['content'] = _md_to_html($widget['content']);
+                        if (isset($object['visible'])) {
+                            $object['visible'] = _json_to_string($leaf['visible']);
+                        }
+
+                        $section_oLeaf = Leaf::create($object)->first();
+
+                        if (!isset($leaf['groups'])) continue;
+
+                        foreach ($leaf['groups'] as $group_index => $group) {
+
+                            $object = $group;
+                            if (isset($object['id'])) {
+                                unset($object['id']);
                             }
-            
-                            Widget::create($widget);
+                            if (isset($object['widgets'])) {
+                                unset($object['widgets']);
+                            }
+                            $object['identifier'] = $group_index + 1;
+                            $object['leaf_id'] = $section_oLeaf['id'];
+
+                            if (isset($object['visible'])) {
+                                $object['visible'] = _json_to_string($group['visible']);
+                            }
+
+                            $section_oGroup = Group::create($object)->first();
+
+                            if (!isset($group['widgets'])) continue;
+
+                            foreach ($group['widgets'] as $widget_index => $widget) {
+                                if (isset($widget['id'])) {
+                                    unset($widget['id']);
+                                }
+                                $widget['group_id'] = $section_oGroup['id'];
+                                $widget['identifier'] = $widget_index + 1;
+                                if (isset($widget['content'])) {
+                                    $widget['content'] = _md_to_html($widget['content']);
+                                }
+
+                                Widget::create($widget);
+                            }
                         }
-                    }    
+                    }
                 }
-            
             }
         }
     }
-    
-  }
 }
 
 
 
-function _json_to_string($a) {
+function _json_to_string($a)
+{
     $res = '';
-    if(count($a)) {
+    if (count($a)) {
         list($operand, $operator, $value) = $a;
         $res = "'$operand','$operator',";
-        if(is_numeric($value) || is_bool($value)) {
-            if(is_bool($value)) {
-                $res .= ($value)?'true':'false';
-            }
-            else {
+        if (is_numeric($value) || is_bool($value)) {
+            if (is_bool($value)) {
+                $res .= ($value) ? 'true' : 'false';
+            } else {
                 $res .= "$value";
             }
-        }
-        else {
+        } else {
             $res .= "'$value'";
         }
     }
-    return '['.$res.']';
+    return '[' . $res . ']';
 }
 
 
-function _md_to_html($s) {
+function _md_to_html($s)
+{
 
     $s = preg_replace('/  \* /im', ' * ', $s);
     $s = preg_replace('/  ([0-9]{1,2}\.) /im', '┌$1', $s);
-    $s = preg_replace('/  /im', '┐', $s);    
-    $s = preg_replace('/\*\*(.*?)\*\*/im', '<b>$1</b>', $s);    
-    $s = preg_replace('/\* ([^\*┐]*)/im', '<ul><li>$1</li></ul>', $s);    
-    $s = preg_replace('/\*([^\*]*)\*/im', '<em>$1</em>', $s);    
-    $s = preg_replace('/([0-9]{1,2})\. ([^┐┌]*)/im', '<ol start="$1"><li>$2</li></ol>', $s);    
-    $s = preg_replace('/┌/im', '', $s);                    
-    $s = preg_replace('/┐/im', '</p><p>', $s);                    
+    $s = preg_replace('/  /im', '┐', $s);
+    $s = preg_replace('/\*\*(.*?)\*\*/im', '<b>$1</b>', $s);
+    $s = preg_replace('/\* ([^\*┐]*)/im', '<ul><li>$1</li></ul>', $s);
+    $s = preg_replace('/\*([^\*]*)\*/im', '<em>$1</em>', $s);
+    $s = preg_replace('/([0-9]{1,2})\. ([^┐┌]*)/im', '<ol start="$1"><li>$2</li></ol>', $s);
+    $s = preg_replace('/┌/im', '', $s);
+    $s = preg_replace('/┐/im', '</p><p>', $s);
 
-    return '<p>'.$s.'</p>';
+    return '<p>' . $s . '</p>';
 }

@@ -4,13 +4,19 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
+use equal\error\Reporter;
 use equal\orm\Model;
+use equal\services\Container;
+use Exception;
 
-class Group extends Model {
+class Group extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
             'identifier' => [
                 'type'              => 'integer',
@@ -34,7 +40,7 @@ class Group extends Model {
             'row_span' => [
                 'type'              => 'integer',
                 'default'           => 1,
-                'description'       => "Height of the group, in rows (default = 1, max = 8)"
+                'description'       => "Height of the group, in rows (default = 1, max = 8)."
             ],
 
             'visible' => [
@@ -91,32 +97,49 @@ class Group extends Model {
 
         ];
     }
-
-
-    public static function calcVisible($om, $oids, $lang) {
+    /**
+     * Calculates the visibility of groups.
+     * @param \equal\orm\Collection $self  An instance of a Group collection.
+     * @return array<string> The visibility of each group
+     */
+    public static function calcVisible($self)
+    {
         $result = [];
 
-        $groups = $om->read(__CLASS__, $oids, ['identifier', 'visibility_rule'], $lang);
+        // file_put_contents(QN_LOG_STORAGE_DIR . '/tmp.log', 'calcVisible' . PHP_EOL, FILE_APPEND | LOCK_EX);
 
-        foreach($groups as $oid => $group) {
-            if($group['visibility_rule'] == 'always visible') {
+        //Retrieves data from the Group collection.
+        $groups = $self->read(['identifier', 'visibility_rule']);
+
+        foreach ($groups as $oid => $group) {
+            // $result[$oid] = "['test', '=', 'test']";
+            continue;
+            if ($group['visibility_rule'] == 'always visible') {
                 $result[$oid] = "[]";
-            }
-            else {
+            } else {
+                // If we have a different pattern like $group['visibility_rule'] == '$page.submitted = true'.
                 $rule = str_replace('$identifier', $group['identifier'], $group['visibility_rule']);
+
+                // The visibility_rule is processed and a new array is assigned to the corresponding key.
                 list($operand, $operator, $value) = explode(' ', $rule);
-                if(!is_numeric($value) && !in_array($value, ['true', 'false'])) {
+                if (!is_numeric($value) && !in_array($value, ['true', 'false'])) {
                     $value = "'$value'";
                 }
                 $result[$oid] = "['$operand','$operator',$value]";
             }
         }
-
         return $result;
     }
 
-    public static function onupdateVisibility($om, $oids, $values, $lang) {
-        $om->write(__CLASS__, $oids, ['visible' => null], $lang);
+    /**
+     * @param \equal\orm\Collection $self  Collection holding a series of objects of current class.
+     */
+    public static function onupdateVisibility($self)
+    {
+        file_put_contents(QN_LOG_STORAGE_DIR . '/tmp.log', 'onupdateVisible' . PHP_EOL, FILE_APPEND | LOCK_EX);
+        $self->read(['visible']);
+        foreach ($self as $id) {
+            Group::id($id)->update(['visible' => null]);
+        }
     }
-
 }

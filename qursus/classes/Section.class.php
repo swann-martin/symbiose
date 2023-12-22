@@ -4,13 +4,16 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class Section extends Model {
+class Section extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
             'identifier' => [
                 'type'              => 'integer',
@@ -24,7 +27,7 @@ class Section extends Model {
                 'default'           => 1
             ],
 
-            'name' => [            
+            'name' => [
                 'type'              => 'computed',
                 'function'          => 'qursus\Section::getDisplayName',
                 'result_type'       => 'string',
@@ -55,18 +58,18 @@ class Section extends Model {
 
         ];
     }
-    
 
-    public static function getDisplayName($om, $oids, $lang) {
+
+    public static function getDisplayName($om, $oids, $lang)
+    {
         $result = [];
 
         $sections = $om->read(__CLASS__, $oids, ['id', 'identifier'], $lang);
 
-        foreach($sections as $oid => $section) {
+        foreach ($sections as $oid => $section) {
             $result[$oid] = sprintf("%d-%d", $section['id'], $section['identifier']);
         }
 
         return $result;
     }
-
 }

@@ -16,12 +16,39 @@
                                         "items": [
                                             {
                                                 "type": "field",
+                                                "value": "id",
+                                                "width": "25%",
+                                                "widget": {
+                                                    "heading": true,
+                                                    "min": 0
+                                                }
+                                            },
+                                            {
+                                                "type": "field",
                                                 "value": "name",
-                                                "width": "100%",
+                                                "width": "50%",
                                                 "widget": {
                                                     "heading": true
                                                 }
-                                            }                                        
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "width": "100%",
+                                        "items": [
+                                            {
+                                                "type": "field",
+                                                "value": "title",
+                                                "width": "50%",
+                                                "widget": {
+                                                    "heading": true
+                                                }
+                                            },
+                                            {
+                                                "type": "field",
+                                                "value": "subtitle",
+                                                "width": "50%"
+                                            }
                                         ]
                                     },
                                     {
@@ -29,19 +56,14 @@
                                         "items": [
                                             {
                                                 "type": "field",
-                                                "value": "title",
+                                                "value": "description",
                                                 "width": "100%",
                                                 "widget": {
-                                                    "heading": true
+                                                    "usage": "text"
                                                 }
-                                            },                                            
-                                            {
-                                                "type": "field",
-                                                "value": "subtitle",
-                                                "width": "100%"
                                             }
                                         ]
-                                    }                                    
+                                    }
                                 ]
                             }
                         ]

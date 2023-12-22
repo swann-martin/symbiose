@@ -1,6 +1,8 @@
 <?php
-use qursus\UserAccess;
+
+use qursus\Module;
 use qursus\UserStatus;
+
 
 
 list($params, $providers) = announce([
@@ -20,7 +22,12 @@ list($params, $providers) = announce([
     'providers'     => ['context', 'orm', 'auth']
 ]);
 
-list($context, $orm) = [ $providers['context'], $providers['orm'] ];
+/**
+ * @var \equal\php\Context                  $context
+ * @var \equal\orm\ObjectManager            $orm
+ * @var \equal\auth\AuthenticationManager   $auth
+ */
+list($context, $orm) = [$providers['context'], $providers['orm'], $providers['auth']];
 
 /*
     Retrieve current user id
@@ -54,41 +61,38 @@ if(!$access || !count($access)) {
 */
 
 $json = run('get', 'model_collect', [
-            'entity' 	=> 'qursus\Module',
-            'domain' 	=> ['pack_id', '=', $params['pack_id'] ],
-            'fields' 	=> ['identifier', 'title', 'duration', 'description', 'page_count'],
-            'order' 	=> 'identifier',
-            'sort' 		=> 'asc'
-        ]);
+    'entity'     => 'qursus\Module',
+    'domain'     => ['pack_id', '=', $params['pack_id']],
+    'fields'     => ['identifier', 'title', 'duration', 'description', 'page_count'],
+    'order'     => 'identifier',
+    'sort'         => 'asc'
+]);
 
 $data = json_decode($json, true);
-if(isset($data['errors'])) {
-    foreach($data['errors'] as $name => $message) throw new Exception($message, qn_error_code($name));
+if (isset($data['errors'])) {
+    foreach ($data['errors'] as $name => $message) throw new Exception($message, qn_error_code($name));
 }
 
-$modules = $data;
+/** @var qursus\Module []  $modules */
+$modules  = $data;
 
-/*
-    Enrich modules with current user statuses
-*/
-
-foreach($modules as $index => $module) {
+/*Enrich modules with current user statuses*/
+foreach ($modules as $index => $module) {
     $percent = 0;
-    $status = UserStatus::search([ ['module_id', '=', $module['id']], ['user_id', '=', $user_id] ])->read(['page_count', 'chapter_index', 'page_index', 'is_complete'])->first();
-    if($status && count($status)) {
-        $percent = intval( (($status['page_count']+1) / $module['page_count']) *100 );
+    $status = UserStatus::search([['module_id', '=', $module['id']], ['user_id', '=', $user_id]])->read(['page_count', 'chapter_index', 'page_index', 'is_complete'])->first();
+    if ($status && count($status)) {
+        $percent = intval((($status['page_count'] + 1) / $module['page_count']) * 100);
         $modules[$index]['status'] = 'in progress';
-        if($status['is_complete']) {
+        if ($status['is_complete']) {
             $percent = 100;
             $modules[$index]['status'] = 'completed';
         }
-    }
-    else {
+    } else {
         $modules[$index]['status'] = 'not started';
     }
     $modules[$index]['percent'] = $percent;
 }
 
 $context->httpResponse()
-->body($modules)
-->send();
+    ->body($modules)
+    ->send();

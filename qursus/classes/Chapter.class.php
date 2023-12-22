@@ -4,13 +4,16 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class Chapter extends Model {
+class Chapter extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
             'identifier' => [
                 'type'              => 'integer',
@@ -70,12 +73,20 @@ class Chapter extends Model {
         ];
     }
 
-    public static function calcPageCount($om, $oids, $lang) {
+    /**
+     * Calculates the page count for each chapter in a given language.
+     * @var\equal\orm\ObjectManager $orm
+     * @param array $oids The array of chapter IDs.
+     * @param string $lang The language code example 'en'.
+     * @return array The array of chapter IDs as keys and their respective page counts as values.
+     */
+    public static function calcPageCount($om, $oids, $lang)
+    {
         $result = [];
 
         $chapters = $om->read(__CLASS__, $oids, ['pages_ids'], $lang);
 
-        foreach($chapters as $oid => $chapter) {
+        foreach ($chapters as $oid => $chapter) {
             $result[$oid] = count($chapter['pages_ids']);
         }
 
@@ -83,14 +94,22 @@ class Chapter extends Model {
     }
 
 
-    public static function onupdatePagesIds($orm, $oids, $values, $lang) {
+    /**
+     * Updates the chapter ids for each module.
+     * @param ObjectManager $orm The object manager instance.
+     * @param array $oids An array of object ids.
+     * @param string $lang The language to use for reading the leaves.
+     * @return array The visible array.
+     */
+    public static function onupdatePagesIds($orm, $oids, $values, $lang)
+    {
         // force refresh page_count
         $orm->write(__CLASS__, $oids, ['page_count' => null], $lang);
 
         // refresh parent modules (will trigger back Chapter::calcPageCount)
         $chapters = $orm->read(__CLASS__, $oids, ['module_id'], $lang);
         $modules_ids = [];
-        foreach($chapters as $oid => $chapter) {
+        foreach ($chapters as $oid => $chapter) {
             // force refresh page_count
             $orm->write('qursus\Module', $chapter['module_id'], ['page_count' => null], $lang);
             $modules_ids[$chapter['module_id']] = true;
@@ -98,14 +117,20 @@ class Chapter extends Model {
         $orm->read('qursus\Module', array_keys($modules_ids), ['page_count'], $lang);
     }
 
-
-    public static function onupdateModuleId($om, $oids, $values, $lang) {
+    /**
+     * Updates the chapter ids for each module.
+     * @param ObjectManager $orm The object manager instance.
+     * @param array $oids An array of object ids.
+     * @param array $values.
+     * @param string $lang The language to use for reading the leaves.
+     * @return array The visible array.
+     */
+    public static function onupdateModuleId($om, $oids, $values, $lang)
+    {
         $chapters = $om->read(__CLASS__, $oids, ['module_id'], $lang);
 
-        foreach($chapters as $oid => $chapter) {
+        foreach ($chapters as $oid => $chapter) {
             Module::onchangeChaptersIds($om, $chapter['module_id'], $lang);
         }
     }
-
-
 }

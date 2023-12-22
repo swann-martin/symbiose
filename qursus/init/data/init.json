@@ -1,0 +1,100 @@
+[
+    {
+          name: "qursus\\Pack",
+          lang: "en",
+          data: [
+            {
+                id: 1,
+                name: "my-first-pack",
+                title: "My first Pack",
+                subtitle: "the very first pack",
+                description: "the first pack",
+                langs_ids: [
+                    1,
+                ],
+            },
+            {},
+        ],
+    },
+    {
+          name: "qursus\\Group",
+          lang: "en",
+          data: [
+            {
+                id: "1",
+                identifier: "1",
+                order: "1",
+                leaf_id: "1",
+                row_span: "2",
+                visibility_rule: "always_visible",
+                direction: "vertical",
+            },
+            {
+                identifier: "2",
+                order: "2",
+                direction: "vertical",
+                row_span: "1",
+                visibility_rule: "always_visible",
+                leaf_id: "1",
+            },
+        ],
+    },
+    {
+          name: "qursus\\Lang",
+          lang: "en",
+          data: [
+            {
+                id: 1,
+                name: "English",
+                code: "en",
+                packs_ids: [
+                    1,
+                ],
+            },
+        ],
+    },
+    {
+          name: "qursus\\Leaf",
+          lang: "en",
+          data: [
+            {
+                identifier: "1",
+                order: "1",
+                visibility_rule: "always visible",
+                contrast: "light",
+                page_id: "1",
+            },
+            {
+                identifier: "2",
+                order: "1",
+                visibility_rule: "always visible",
+                contrast: "light",
+            },
+        ],
+    },
+    {
+          name: "qursus\\Chapter",
+          lang: "en",
+          data: [
+            {
+                identifier: "1",
+                order: "1",
+                title: "First Chapter",
+                module_id: "1",
+            },
+        ],
+    },
+    {
+          name: "qursus\\Page",
+          lang: "en",
+          data: [
+            {
+                identifier: "1",
+                order: "1",
+                next_active_rule: "always_visible",
+                chapter_id: "1",
+                section_id: "1",
+            },
+        ],
+    },
+]

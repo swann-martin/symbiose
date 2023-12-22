@@ -4,13 +4,16 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class Page extends Model {
+class Page extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
             'identifier' => [
                 'type'              => 'integer',
@@ -96,38 +99,95 @@ class Page extends Model {
         ];
     }
 
-    public static function calcNextActive($om, $oids, $lang) {
+    /**
+     * Calculates the next active items based on the given object manager, object IDs, and language.
+     *
+     * @param ObjectManager $om The object manager used to read the data.
+     * @param array $oids The array of object IDs.
+     * @param string $lang The language used to read the data.
+     * @return array The array of next active items.
+     */
+    // public static function calcNextActive($om, $oids, $lang)
+    // {
+    //     $result = [];
+
+    //     $pages = $om->read(__CLASS__, $oids, ['identifier', 'next_active_rule'], $lang);
+
+    //     foreach ($pages as $oid => $page) {
+    //         if ($page['next_active_rule'] == 'always visible') {
+    //             $result[$oid] = "[]";
+    //         } else {
+    //             $rule = str_replace('$identifier', $page['identifier'], $page['next_active_rule']);
+    //             list($operand, $operator, $value) = explode(' ', $rule);
+    //             if (!is_numeric($value) && !in_array($value, ['true', 'false'])) {
+    //                 $value = "'$value'";
+    //             }
+    //             $result[$oid] = "['$operand','$operator',$value]";
+    //         }
+    //     }
+    //     return $result;
+    // }
+
+    /**
+     * Calculates the next active items based on the last Page collection.
+     * @param \equal\orm\Collection $self  An instance of a Page collection.
+     */
+    public static function calcNextActive($self)
+    {
         $result = [];
 
-        $pages = $om->read(__CLASS__, $oids, ['identifier', 'next_active_rule'], $lang);
+        $pages = $self->read(['identifier', 'next_active_rule']);
 
-        foreach($pages as $oid => $page) {
-            if($page['next_active_rule'] == 'always visible') {
-                $result[$oid] = "[]";
-            }
-            else {
+        foreach ($pages as $index => $page) {
+            if ($page['next_active_rule'] == 'always visible') {
+                $result[$index] = "[]";
+            } else {
+
                 $rule = str_replace('$identifier', $page['identifier'], $page['next_active_rule']);
+
                 list($operand, $operator, $value) = explode(' ', $rule);
-                if(!is_numeric($value) && !in_array($value, ['true', 'false'])) {
+                if (!is_numeric($value) && !in_array($value, ['true', 'false'])) {
                     $value = "'$value'";
                 }
-                $result[$oid] = "['$operand','$operator',$value]";
+                $result[$index] = "['$operand','$operator',$value]";
             }
         }
 
         return $result;
     }
 
-    public static function onupdateNextActive($om, $oids, $values, $lang) {
-        $om->write(__CLASS__, $oids, ['next_active' => null], $lang);
+    /**
+     * Updates the next active value of a given set of objects in the database.
+     *
+     * @param object $om The object manager to use for writing to the database.
+     * @param array $oids The array of object IDs to update.
+     * @param array $values The array of values to update the objects with.
+     * @param string $lang The language code of the objects' language.
+     * @throws Exception If there is an error while writing to the database.
+     * @return void
+     */
+    public static function onupdateNextActive($om, $oids, $values, $lang)
+    {
+        $om->update(__CLASS__, $oids, ['next_active' => null], $lang);
     }
 
-    public static function onupdateChapterId($om, $oids, $values, $lang) {
+
+    /**
+     * Update the chapter ID for a given set of objects.
+     *
+     * @param object_manager $om The object manager instance.
+     * @param array $oids An array of object IDs.
+     * @param array $values An array of values.
+     * @param string $lang The language.
+     * @throws Exception If an error occurs.
+     * @return void
+     */
+    public static function onupdateChapterId($om, $oids, $values, $lang)
+    {
         $pages = $om->read(__CLASS__, $oids, ['chapter_id'], $lang);
 
-        foreach($pages as $oid => $page) {
+        foreach ($pages as $oid => $page) {
             Chapter::onupdatePagesIds($om, $page['chapter_id'], $values, $lang);
         }
     }
-
 }

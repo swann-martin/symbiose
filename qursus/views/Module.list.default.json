@@ -13,6 +13,11 @@
             },
             {
                 "type": "field",
+                "value": "pack_id",
+                "width": "10%"
+            },
+            {
+                "type": "field",
                 "value": "order",
                 "width": "10%"
             },

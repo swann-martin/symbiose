@@ -1,3 +1,4 @@
+import { EnvironmentType } from "./EnvService";
 import { $ } from "./jquery-lib";
 import { EnvService } from "./qursus-services";
 
@@ -17,7 +18,7 @@ export class _ApiService {
     constructor() {
         $.ajaxSetup({
             cache: false,                // prevent caching
-            beforeSend: (xhr:any) => {
+            beforeSend: (xhr: any) => {
                 /*
                 // #removed for XSS protection (we use httpOnly cookie instead)
                 let access_token = this.getCookie('access_token');
@@ -47,35 +48,35 @@ export class _ApiService {
         try {
             const environment = await EnvService.getEnv();
             const response = await $.get({
-                url: environment.rest_api_url+'/userinfo'
+                url: environment.rest_api_url + '/userinfo'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
     }
 
-    public async fetch(route:string, body:any = {}) {
+    public async fetch(route: string, body: any = {}) {
         let result: any;
         try {
-            const environment = await EnvService.getEnv();
+            const environment: EnvironmentType = await EnvService.getEnv();
             const response = await $.get({
-                url: environment.backend_url+route,
+                url: environment?.backend_url + route,
                 dataType: 'json',
                 data: body,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
     }
 
-    public async create(entity:string, fields:any = {}) {
+    public async create(entity: string, fields: any = {}) {
         let result: any;
         try {
             const environment = await EnvService.getEnv();
@@ -85,20 +86,20 @@ export class _ApiService {
                 lang: environment.lang
             };
             const response = await $.get({
-                url: environment.backend_url+'?do=model_create',
+                url: environment.backend_url + '?do=model_create',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
     }
 
-    public async read(entity:string, ids:any[], fields:[]) {
+    public async read(entity: string, ids: any[], fields: []) {
         let result: any;
         try {
             const environment = await EnvService.getEnv();
@@ -109,20 +110,20 @@ export class _ApiService {
                 lang: environment.lang
             };
             const response = await $.get({
-                url: environment.backend_url+'?get=model_read',
+                url: environment.backend_url + '?get=model_read',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
     }
 
-    public async delete(entity:string, ids:any[], permanent:boolean=false) {
+    public async delete(entity: string, ids: any[], permanent: boolean = false) {
         let result: any;
         try {
             const environment = await EnvService.getEnv();
@@ -132,20 +133,20 @@ export class _ApiService {
                 permanent: permanent
             };
             const response = await $.get({
-                url: environment.backend_url+'?do=model_delete',
+                url: environment.backend_url + '?do=model_delete',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
     }
 
-    public async archive(entity:string, ids:any[]) {
+    public async archive(entity: string, ids: any[]) {
         let result: any;
         try {
             const environment = await EnvService.getEnv();
@@ -154,14 +155,14 @@ export class _ApiService {
                 ids: ids
             };
             const response = await $.get({
-                url: environment.backend_url+'?do=model_archive',
+                url: environment.backend_url + '?do=model_archive',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
@@ -175,7 +176,7 @@ export class _ApiService {
      * @param ids
      * @param fields
      */
-    public async update(entity:string, ids:any[], fields:any, force: boolean=false) {
+    public async update(entity: string, ids: any[], fields: any, force: boolean = false) {
         console.log('ApiService::update', entity, ids, fields);
         let result: any = true;
         try {
@@ -188,20 +189,20 @@ export class _ApiService {
                 force: force
             };
             const response = await $.post({
-                url: environment.backend_url+'?do=model_update',
+                url: environment.backend_url + '?do=model_update',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
     }
 
-    public async clone(entity:string, ids:any[]) {
+    public async clone(entity: string, ids: any[]) {
         let result: any;
         try {
             const environment = await EnvService.getEnv();
@@ -211,14 +212,14 @@ export class _ApiService {
                 lang: environment.lang
             };
             const response = await $.get({
-                url: environment.backend_url+'?do=model_clone',
+                url: environment.backend_url + '?do=model_clone',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
@@ -237,7 +238,7 @@ export class _ApiService {
      * @param lang
      * @returns     Promise     Upon success, the promise is resolved into an Array holding matching objects (collection).
      */
-    public async collect(entity:string, domain:any[], fields:any[], order:string, sort:string, start:number, limit:number, lang:string) {
+    public async collect(entity: string, domain: any[], fields: any[], order: string, sort: string, start: number, limit: number, lang: string) {
         console.log('ApiService::collect', entity, domain, fields, order, sort, start, limit, lang);
         var result = [];
         try {
@@ -253,16 +254,16 @@ export class _ApiService {
             };
             const environment = await EnvService.getEnv();
             const response = await $.get({
-                url: environment.backend_url+'?get=model_collect',
+                url: environment.backend_url + '?get=model_collect',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
             }).done((event: any, textStatus: string, jqXHR: any) => {
-                this.last_count = parseInt( <any>jqXHR.getResponseHeader('X-Total-Count') );
-            } );
+                this.last_count = parseInt(<any>jqXHR.getResponseHeader('X-Total-Count'));
+            });
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;
@@ -279,7 +280,7 @@ export class _ApiService {
      * @param limit
      * @returns
      */
-    public async search(entity:string, domain:any[], order:string, sort:string, start:number, limit:number) {
+    public async search(entity: string, domain: any[], order: string, sort: string, start: number, limit: number) {
         var result = [];
         try {
             let params = {
@@ -292,7 +293,7 @@ export class _ApiService {
             };
             const environment = await EnvService.getEnv();
             const response = await $.get({
-                url: environment.backend_url+'?get=model_search',
+                url: environment.backend_url + '?get=model_search',
                 dataType: 'json',
                 data: params,
                 contentType: 'application/x-www-form-urlencoded; charset=utf-8'
@@ -300,7 +301,7 @@ export class _ApiService {
             // reponse should be an array of ids
             result = response;
         }
-        catch(response:any) {
+        catch (response: any) {
             throw response.responseJSON;
         }
         return result;

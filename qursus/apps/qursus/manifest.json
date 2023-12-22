@@ -1,0 +1,8 @@
+{
+    "name": "qursus",
+    "description": "This is the qursus application.",
+    "url": "/qursus",
+    "icon": "edit_note",
+    "color": "#d2252c",
+    "show_in_apps": true
+}

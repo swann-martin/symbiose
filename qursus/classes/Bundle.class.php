@@ -4,21 +4,26 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class Bundle extends Model {
+class Bundle extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
             'name' => [
                 'type'              => 'string',
+                'description'       => 'The name of the Bundle.',
                 'multilang'         => true
             ],
 
             'description' => [
                 'type'              => 'string',
+                'description'       => 'The content of the Bundle described in plain text.',
                 'usage'             => 'text/plain',
                 'multilang'         => true
             ],
@@ -38,5 +43,4 @@ class Bundle extends Model {
             ]
         ];
     }
-
 }

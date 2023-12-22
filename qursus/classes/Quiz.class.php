@@ -4,29 +4,32 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class Quiz extends Model {
+class Quiz extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
             'identifier' => [
                 'type'              => 'integer',
                 'description'       => 'Unique Id of the quiz within the pack.'
             ],
 
-            'name' => [            
+            'name' => [
                 'type'              => 'string',
                 'multilang'         => true,
                 'default'           => 'Quiz'
             ],
 
-            'quiz_code' => [            
+            'quiz_code' => [
                 'type'              => 'integer',
-                'multilang'         => true
-            ],            
+                'description'       => 'Unique code of the quizz.'
+            ],
 
             'pack_id' => [
                 'type'              => 'many2one',
@@ -36,5 +39,4 @@ class Quiz extends Model {
             ]
         ];
     }
-
 }

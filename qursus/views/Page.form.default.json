@@ -21,7 +21,7 @@
                                                 "widget": {
                                                     "heading": true
                                                 }
-                                            },   
+                                            },
                                             {
                                                 "type": "field",
                                                 "value": "order",
@@ -39,13 +39,13 @@
                                                 "type": "field",
                                                 "value": "chapter_id",
                                                 "width": "50%",
-                                                "visible": false                                                
+                                                "visible": false
                                             },
                                             {
                                                 "type": "field",
                                                 "value": "section_id",
                                                 "width": "50%",
-                                                "visible": false                                                
+                                                "visible": false
                                             }
                                         ]
                                     }
@@ -76,7 +76,11 @@
                     {
                         "id": "section.sections",
                         "label": "Sections",
-                        "visible": ["section_id", "is", null],
+                        "visible": [
+                            "section_id",
+                            "is",
+                            null
+                        ],
                         "rows": [
                             {
                                 "columns": [
@@ -93,7 +97,7 @@
                                 ]
                             }
                         ]
-                    }                    
+                    }
                 ]
             }
         ]

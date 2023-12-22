@@ -1,0 +1,11 @@
+{
+    "name": "qursus",
+    "version": "1.0",
+    "author": "Yesbabylon",
+    "depends_on": [
+        "core"
+    ],
+    "apps": [
+        "qursus"
+    ]
+}

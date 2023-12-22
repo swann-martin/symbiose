@@ -4,13 +4,16 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class Module extends Model {
+class Module extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
             'identifier' => [
                 'type'              => 'integer',
@@ -97,25 +100,29 @@ class Module extends Model {
         ];
     }
 
-    public static function calcLink($om, $oids, $lang) {
+    public static function calcLink($om, $oids, $lang)
+    {
         $result = [];
+        // $site_url_base = 'https://www.help2protect.info/app/?mode=edit&module=';
+        $site_url_base = WEBSITE_URL . '/qursus/?mode=edit&module=';
 
-        foreach($oids as $oid) {
-            $result[$oid] = 'https://www.help2protect.info/app/?mode=edit&module='.$oid.'&lang='.$lang;
+        foreach ($oids as $oid) {
+            $result[$oid] = $site_url_base . $oid . '&lang=' . $lang;
         }
 
         return $result;
     }
 
-    public static function calcPageCount($om, $oids, $lang) {
+    public static function calcPageCount($om, $oids, $lang)
+    {
         $result = [];
 
         $modules = $om->read(__CLASS__, $oids, ['chapters_ids'], $lang);
 
-        foreach($modules as $oid => $module) {
+        foreach ($modules as $oid => $module) {
             $chapters = $om->read('qursus\Chapter', $module['chapters_ids'], ['page_count'], $lang);
             $result[$oid] = 0;
-            foreach($chapters as $chapter) {
+            foreach ($chapters as $chapter) {
                 $result[$oid] += $chapter['page_count'];
             }
         }
@@ -123,22 +130,23 @@ class Module extends Model {
         return $result;
     }
 
-    public static function calcChapterCount($om, $oids, $lang) {
+    public static function calcChapterCount($om, $oids, $lang)
+    {
         $result = [];
 
         $modules = $om->read(__CLASS__, $oids, ['chapters_ids'], $lang);
 
-        foreach($modules as $oid => $module) {
+        foreach ($modules as $oid => $module) {
             $result[$oid] = count($module['chapters_ids']);
         }
 
         return $result;
     }
 
-    public static function onupdateChaptersIds($orm, $oids, $values, $lang) {
+    public static function onupdateChaptersIds($orm, $oids, $values, $lang)
+    {
         // force immediate refresh chapter_count
         $orm->write(__CLASS__, $oids, ['chapter_count' => null], $lang);
         $orm->read(__CLASS__, $oids, ['chapter_count'], $lang);
     }
-
 }

@@ -4,13 +4,16 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class UserStatus extends Model {
+class UserStatus extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
 
             'pack_id' => [
@@ -32,10 +35,10 @@ class UserStatus extends Model {
             'user_id' => [
                 'type'              => 'integer',
                 'description'       => 'External user identifier.',
-                'default'           => 1                
+                'default'           => 1
             ],
 
-            'chapter_index' => [            
+            'chapter_index' => [
                 'type'              => 'integer',
                 'description'       => 'Chapter index within the module.',
                 'default'           => 0
@@ -55,38 +58,38 @@ class UserStatus extends Model {
 
             'is_complete' => [
                 'type'              => 'boolean',
-                'description'       => 'The user has finished the module.',
+                'description'       => 'True if the user has finished the module.',
                 'default'           => false,
-                'onupdate'          => 'qursus\UserStatus::onupdateIsComplete'                
+                'onupdate'          => 'qursus\UserStatus::onupdateIsComplete'
             ]
 
         ];
-    }    
+    }
 
-    public function getUnique() {
+    public function getUnique()
+    {
         return [
             ['module_id', 'user_id']
         ];
-    }    
+    }
 
-    public static function onupdateIsComplete($orm, $oids, $values, $lang) {
-        
+    public static function onupdateIsComplete($orm, $oids, $values, $lang)
+    {
+
         $statuses = $orm->read(__CLASS__, $oids, ['pack_id', 'user_id'], $lang);
 
-        if($statuses && count($statuses)) {
-            foreach($statuses as $oid => $status) {
+        if ($statuses && count($statuses)) {
+            foreach ($statuses as $oid => $status) {
                 $pack_id = $status['pack_id'];
                 $user_id = $status['user_id'];
-                $ids = $orm->search('qursus\UserAccess', [ ['user_id', '=', $user_id], ['pack_id', '=', $pack_id] ]);
-                if($ids && count($ids)) {
-                    // reset related UserAccess is_complete                
+                $ids = $orm->search('qursus\UserAccess', [['user_id', '=', $user_id], ['pack_id', '=', $pack_id]]);
+                if ($ids && count($ids)) {
+                    // reset related UserAccess is_complete
                     $orm->write('qursus\UserAccess', $ids, ['is_complete' => null], $lang);
                     // and force immediate refresh
                     $orm->read('qursus\UserAccess', $ids, ['is_complete'], $lang);
                 }
             }
         }
-        
     }
-
 }

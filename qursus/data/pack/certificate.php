@@ -1,4 +1,5 @@
 <?php
+
 use Dompdf\Dompdf;
 use Dompdf\Options as DompdfOptions;
 use Endroid\QrCode\Builder\Builder;
@@ -8,69 +9,76 @@ use qursus\UserAccess;
 use qursus\Pack;
 use qursus\Module;
 
-list($params, $providers) = announce([
-    'description'   => "Returns a fully loaded JSON formatted single module.",
-    'params'        => [
-        'id' =>  [
-            'description'   => 'Pack identifier (id field).',
-            'type'          => 'integer',
-            'required'      => true
-        ],
-        'mode' =>  [
-            'description'   => 'Rendering mode (pdf or html).',
-            'type'          => 'string',
-            'default'       => 'pdf'
-        ],
-        'lang' =>  [
-            'description'   => 'Language requested for multilang values.',
-            'type'          => 'string',
-            'default'       => DEFAULT_LANG
-        ]
+list($params, $providers) = eQual::announce([
+  'description'   => "Returns a html page or a signed pdf certificate.",
+  'params'        => [
+    'id' =>  [
+      'description'   => 'Pack identifier (id field).',
+      'type'          => 'integer',
+      'required'      => true
     ],
-    'response'      => [
-        'accept-origin' => '*'
+    'mode' =>  [
+      'description'   => 'Rendering mode (pdf or html).',
+      'type'          => 'string',
+      'default'       => 'pdf'
     ],
-    'providers'     => ['context', 'orm', 'auth']
+    'lang' =>  [
+      'description'   => 'Language requested for multilang values.',
+      'type'          => 'string',
+      'default'       => constant('DEFAULT_LANG')
+    ]
+  ],
+  'response'      => [
+    'accept-origin' => '*'
+  ],
+  'providers'     => ['context', 'orm', 'auth']
 ]);
 
-
-list($context, $orm) = [ $providers['context'], $providers['orm']];
+/**
+ * @var \equal\php\Context                  $context
+ * @var \equal\orm\ObjectManager            $orm
+ * @var \equal\auth\AuthenticationManager   $auth
+ */
+list($context, $orm, $auth) = [$providers['context'], $providers['orm'], $providers['auth']];
 
 /*
     Retrieve current user id
 */
 
-if(!isset($_COOKIE) || !isset($_COOKIE["wp_lms_user"]) || !is_numeric($_COOKIE["wp_lms_user"])) {
-  throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
-}
+// if (!isset($_COOKIE) || !isset($_COOKIE["wp_lms_user"]) || !is_numeric($_COOKIE["wp_lms_user"])) {
+//   throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
+// }
 
-$user_id = (int) $_COOKIE["wp_lms_user"];
+// $user_id = (int) $_COOKIE["wp_lms_user"];
 
-if($user_id <= 0) {
-  throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
-}
-
+// if ($user_id <= 0) {
+//   throw new Exception('unknown_user', QN_ERROR_NOT_ALLOWED);
+// }
+$user_id = $auth->userId();
 
 // default to empty image for QR code
 $installment_qr_url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgDTD2qgAAAAASUVORK5CYII=";
 
+$url_cert = WEBSITE_URL . '/cert/';
+$sig1 = 'Catherine Piana';
+$sig2 = 'Hugo Lüke';
 
 /*
   Retrieve info related to user : completeness and unique alpha code
 */
-$access_ids = UserAccess::search([ ['pack_id', '=', $params['id']], ['user_id', '=', $user_id] ])->ids();
+$access_ids = UserAccess::search([['pack_id', '=', $params['id']], ['user_id', '=', $user_id]])->ids();
 
-if(!count($access_ids)) {
+if (!count($access_ids)) {
   throw new Exception('missing_status', QN_ERROR_INVALID_PARAM);
 }
 
 $access = UserAccess::ids($access_ids)->read(['code_alpha', 'is_complete', 'modified'])->first();
 
-if(!$access) {
+if (!$access) {
   throw new Exception('missing_status', QN_ERROR_INVALID_PARAM);
 }
 
-if(!$access['is_complete']) {
+if (!$access['is_complete']) {
   throw new Exception('cert_not_available', QN_ERROR_NOT_ALLOWED);
 }
 
@@ -80,7 +88,7 @@ if(!$access['is_complete']) {
 
 $pack = Pack::id($params['id'])->read(['title', 'subtitle', 'modules_ids'])->first();
 
-if(!$pack) {
+if (!$pack) {
   throw new Exception('unavailable_pack', QN_ERROR_UNKNOWN);
 }
 
@@ -99,10 +107,9 @@ $user = [
 
 
 while ($row = $db->fetchArray($res)) {
-  if($row['meta_key'] == 'first_name') {
+  if ($row['meta_key'] == 'first_name') {
     $user['firstname'] = $row['meta_value'];
-  }
-  else if($row['meta_key'] == 'last_name') {
+  } else if ($row['meta_key'] == 'last_name') {
     $user['lastname'] = $row['meta_value'];
   }
 }
@@ -110,97 +117,98 @@ while ($row = $db->fetchArray($res)) {
 
 try {
   $result = Builder::create()
-  ->data('https://www.help2protect.info/cert/'.$access['code_alpha'])
-  ->margin(0)
-  ->build();
+    ->data($url_cert . $access['code_alpha'])
+    ->margin(0)
+    ->build();
 
   $installment_qr_url = $result->getDataUri();
-}
-catch(Exception $e) {
-
+} catch (Exception $e) {
 }
 
 ob_start();
 ?>
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>help2protect</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title><? WEBSITE_TITLE ?></title>
 
-<style>
-<?php
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 
-  if($params['mode'] == 'pdf') {
-    echo qursus_pack_certificate_get_style_pdf();
-  }
-  else {
-    echo qursus_pack_certificate_get_style_html();
-  }
+  <style>
+    <?php
 
-?>
-</style>
+    if ($params['mode'] == 'pdf') {
+      echo qursus_pack_certificate_get_style_pdf();
+    } else {
+      echo qursus_pack_certificate_get_style_html();
+    }
 
-  </head>
+    ?>
+  </style>
+
+</head>
+
 <body>
 
 
-<div class="cert-container">
+  <div class="cert-container">
 
-  <div class="cert-stamp-container">
-    <div class="stamp-background"></div>
-    <div class="stamp-content">
-      <div class="title">Course Certificate</div>
-      <div class="stamp"><img src="https://www.help2protect.info/app/cert_stamp.svg" width="250" height="250"></div>
+    <div class="cert-stamp-container">
+      <div class="stamp-background"></div>
+      <div class="stamp-content">
+        <div class="title">Course Certificate</div>
+        <div class="stamp"><img src=<? constant('ROOT_APP_URL') . "/cert_stamp.svg" ?> width="250" height="250"></div>
+      </div>
     </div>
-  </div>
 
-  <div class="title-container">Help2Protect.info</div>
+    <div class="title-container"><? WEBSITE_TITLE ?></div>
 
-  <div class="details-container">
-    <div class="date"><?php echo date('j F Y', $access['modified']); ?></div>
-    <div class="name"><?php echo $user['firstname'].' '.strtoupper($user['lastname']); ?></div>
-    <div class="success-header">Has successfully completed</div>
-    <div class="success-body"><?php echo str_replace(' - ', '<br />', $pack['subtitle']); ?></div>
-    <div class="success-footer">An online non-credit course of <?php echo count($pack['modules_ids']); ?> module(s) delivered through Help2Protect.info</div>
-  </div>
-
-  <div class="signatures-container">
-    <div class="sig sig-1">
-      <div class="img"></div>
-      <div class="txt">Catherine Piana</div>
+    <div class="details-container">
+      <div class="date"><?php echo date('j F Y', $access['modified']); ?></div>
+      <div class="name"><?php echo $user['firstname'] . ' ' . strtoupper($user['lastname']); ?></div>
+      <div class="success-header">Has successfully completed</div>
+      <div class="success-body"><?php echo str_replace(' - ', '<br />', $pack['subtitle']); ?></div>
+      <div class="success-footer">An online non-credit course of <?php echo count($pack['modules_ids']); ?> module(s) delivered through Help2Protect.info</div>
     </div>
-    <div class="sig sig-2">
-      <div class="img"></div>
-      <div class="txt">Hugo Lüke</div>
+
+    <div class="signatures-container">
+      <div class="sig sig-1">
+        <div class="img"></div>
+        <div class="txt"><? $sig1 ?></div>
+      </div>
+      <div class="sig sig-2">
+        <div class="img"></div>
+        <div class="txt"><? $sig2 ?></div>
+      </div>
     </div>
   </div>
 
   <div class="directors-container">
-    Managing directors of Help2Protect SRL
+    Managing directors of <? WEBSITE_TITLE ?>
   </div>
 
 
   <div class="code-container">
     <div class="qr-code">
-      <img src="<?php echo $installment_qr_url; ?>" width= "150" height="150" />
+      <img src="<?php echo $installment_qr_url; ?>" width="150" height="150" />
     </div>
     <div class="notice">
-    Verify at <a href="https://www.help2protect.info/cert/<?php echo $access['code_alpha']; ?>">help2protect.info/cert/<?php echo $access['code_alpha']; ?></a><br />
-    Help2Protect has confirmed the identity of this individual and his participation in the course by generating this personalised QR code.
+      Verify at <a href=<?php $url_cert . $access['code_alpha']; ?>>help2protect.info/cert/<?php echo $access['code_alpha']; ?></a><br />
+      Help2Protect has confirmed the identity of this individual and his participation in the course by generating this personalized QR code.
     </div>
 
   </div>
 
-</div>
+  </div>
 
 </body>
+
 </html>
 <?php
 $html = ob_get_clean();
@@ -211,11 +219,11 @@ $options->set('isRemoteEnabled', true);
 $dompdf = new Dompdf($options);
 
 $http_context = stream_context_create([
-	'ssl' => [
-		'verify_peer'       => FALSE,
-		'verify_peer_name'  => FALSE,
-		'allow_self_signed' => TRUE
-	]
+  'ssl' => [
+    'verify_peer'       => FALSE,
+    'verify_peer_name'  => FALSE,
+    'allow_self_signed' => TRUE
+  ]
 ]);
 $dompdf->setHttpContext($http_context);
 
@@ -227,17 +235,15 @@ $dompdf->render();
 $output = $dompdf->output();
 
 
-if($params['mode'] == 'pdf') {
-    $context->httpResponse()
+if ($params['mode'] == 'pdf') {
+  $context->httpResponse()
     ->header('Content-Type', 'application/pdf')
     // ->header('Content-Disposition', 'attachment; filename="document.pdf"')
     ->header('Content-Disposition', 'inline; filename="document.pdf"')
     ->body($output)
     ->send();
-
-}
-else {
-    $context->httpResponse()
+} else {
+  $context->httpResponse()
     ->header('Content-Type', 'text/html')
     ->body($html)
     ->send();
@@ -246,7 +252,8 @@ else {
 
 
 
-function qursus_pack_certificate_get_style_pdf() {
+function qursus_pack_certificate_get_style_pdf()
+{
   return "
     html {
       margin: 0;
@@ -263,7 +270,7 @@ function qursus_pack_certificate_get_style_pdf() {
     }
 
     .cert-container {
-      background-image: url('https://www.help2protect.info/app/cert_background.png');
+      background-image: url('<?php echo constant('ROOT_APP_URL') . '/cert_background.png'?>);
       background-size: contain;
       border: solid 1px #155991;
       border-radius: 10px;
@@ -479,7 +486,8 @@ function qursus_pack_certificate_get_style_pdf() {
 }
 
 
-function qursus_pack_certificate_get_style_html() {
+function qursus_pack_certificate_get_style_html()
+{
   return "
     .cert-container {
       position: relative;

@@ -4,13 +4,16 @@
     Some Rights Reserved, Yesbabylon SRL, 2020-2021
     Licensed under GNU AGPL 3 license <http://www.gnu.org/licenses/>
 */
+
 namespace qursus;
 
 use equal\orm\Model;
 
-class Widget extends Model {
+class Widget extends Model
+{
 
-    public static function getColumns() {
+    public static function getColumns()
+    {
         return [
 
             'identifier' => [
@@ -30,7 +33,7 @@ class Widget extends Model {
                 'usage'             => 'text/plain',
                 'description'       => 'Content of the widget (markdown support).',
                 'default'           => '',
-//                 'onupdate'          => 'qursus\Widget::onupdateContent'
+                //                 'onupdate'          => 'qursus\Widget::onupdateContent'
                 'multilang'         => true
             ],
 
@@ -73,7 +76,7 @@ class Widget extends Model {
 
             'section_id' => [
                 'type'              => 'integer',
-                'description'       => 'Id of the section the widget interracts with.',
+                'description'       => 'Id of the section the widget interacts with.',
                 'visible'           => ['type', 'in', ['selector_section', 'selector_section_wide']]
             ],
 
@@ -120,27 +123,28 @@ class Widget extends Model {
                 'type'              => 'string',
                 'selection'         => [
                     'ignore'        => 'do nothing',
-//                    'select()'    => 'select',
+                    //                    'select()'    => 'select',
                     'select_one()'  => 'select',
                     'submit()'      => 'submit',
                     'image_full()'  => 'show image',
-                    'play()'        => 'play media'  
+                    'play()'        => 'play media'
                 ],
                 'default'           => 'ignore'
             ]
 
         ];
     }
-    
-    public static function onupdateContent($orm, $oids, $values, $lang) {
+
+    public static function onupdateContent($orm, $oids, $values, $lang)
+    {
         trigger_error("ORM::calling qursus\Widget:onupdateContent", QN_REPORT_DEBUG);
         $res = $orm->read(__CLASS__, $oids, ['content'], $lang);
 
-        if($res > 0 && count($res)) {
-            foreach($res as $oid => $odata) {
-                if(strpos($odata['content'], '</p>') !== false) {
-                    $str = str_replace(["\r\n", "\n"], '', $odata['content']);                    
-                    // $str = str_replace("/p><p", "/p><br /><p", $odata['content']);                    
+        if ($res > 0 && count($res)) {
+            foreach ($res as $oid => $odata) {
+                if (strpos($odata['content'], '</p>') !== false) {
+                    $str = str_replace(["\r\n", "\n"], '', $odata['content']);
+                    // $str = str_replace("/p><p", "/p><br /><p", $odata['content']);
                     $str = str_replace('</p>', '┐', $str);
                     $str = preg_replace('/<p[^>]*>([^┐]*)┐/im', '$1', $str);
                     $str = str_replace('<br>', '<br />', $str);
@@ -151,12 +155,13 @@ class Widget extends Model {
         }
     }
 
-    public static function onupdateType($orm, $oids, $values, $lang) {
+    public static function onupdateType($orm, $oids, $values, $lang)
+    {
         $res = $orm->read(__CLASS__, $oids, ['type'], $lang);
 
-        if($res > 0 && count($res)) {
-            foreach($res as $oid => $odata) {
-                switch($odata['type']) {
+        if ($res > 0 && count($res)) {
+            foreach ($res as $oid => $odata) {
+                switch ($odata['type']) {
                     case 'submit_button':
                         $orm->write(__CLASS__, $oid, ['on_click' => 'submit()'], $lang);
                         break;
@@ -180,5 +185,4 @@ class Widget extends Model {
             }
         }
     }
-
 }

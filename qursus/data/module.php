@@ -1,8 +1,9 @@
 <?php
+
 use qursus\UserAccess;
 use qursus\Module;
 
-list($params, $providers) = announce([
+list($params, $providers) = eQual::announce([
     'description'   => "Returns a fully loaded JSON formatted single module.",
     'params'        => [
         'id' =>  [
@@ -26,7 +27,12 @@ list($params, $providers) = announce([
     'providers'     => ['context', 'orm', 'auth']
 ]);
 
-list($context, $orm) = [ $providers['context'], $providers['orm'] ];
+/**
+ * @var \equal\php\Context                  $context
+ * @var \equal\orm\ObjectManager            $orm
+ * @var \equal\auth\AuthenticationManager   $auth
+ */
+list($context, $orm, $auth) = [$providers['context'], $providers['orm'], $providers['auth']];
 
 /*
     Retrieve current user id
@@ -72,14 +78,15 @@ if($user_id > 3) {
 }
 */
 
-$module = $search->read([
+$module = $search->read(
+    [
         'id',
         'identifier',
         'order',
         'title',
         'description',
         'duration',
-        'pack_id' => ['id', 'name', 'title', 'subtitle', 'description', 'langs_ids'=> ['id', 'name', 'code']],
+        'pack_id' => ['id', 'name', 'title', 'subtitle', 'description', 'langs_ids' => ['id', 'name', 'code']],
         'chapters' => [
             'id',
             'identifier',
@@ -175,13 +182,13 @@ $module = $search->read([
     ],
     $params['lang']
 )
-->adapt('json')
-->first(true);
+    ->adapt('json')
+    ->first(true);
 
-if(!$module) {
+if (!$module) {
     throw new Exception("unknown_entity", QN_ERROR_INVALID_PARAM);
 }
 
 $context->httpResponse()
-        ->body($module)
-        ->send();
+    ->body($module)
+    ->send();
